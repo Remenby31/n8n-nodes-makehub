@@ -1,6 +1,9 @@
 import { 
     INodeType, 
     INodeTypeDescription,
+    ILoadOptionsFunctions,
+    INodePropertyOptions,
+    LoggerProxy,
 } from 'n8n-workflow';
 
 export class MakeHub implements INodeType {
@@ -58,10 +61,10 @@ export class MakeHub implements INodeType {
                 },
                 options: [
                     {
-                        name: 'Create Completion',
+                        name: 'Message a Model',
                         value: 'createCompletion',
-                        action: 'Create a chat completion',
-                        description: 'Create a completion with a LLM model',
+                        action: 'Message a model',
+                        description: 'Create a completion with any LLM model',
                         routing: {
                             request: {
                                 method: 'POST',
@@ -75,10 +78,13 @@ export class MakeHub implements INodeType {
             {
                 displayName: 'Model',
                 name: 'model',
-                type: 'string',
+                type: 'options',
+                typeOptions: {
+                    loadOptionsMethod: 'getModels',
+                },
                 required: true,
-                default: 'meta/Llama-3.3-70B-Instruct-fp16',
-                description: 'ID of the model to use (e.g., meta/Llama-3.3-70B-Instruct-fp16)',
+                default: '',
+                description: 'ID of the model to use',
                 displayOptions: {
                     show: {
                         resource: ['chat'],
@@ -248,5 +254,59 @@ export class MakeHub implements INodeType {
                 ],
             },
         ],
+    };
+
+    methods = {
+        loadOptions: {
+            async getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+                try {
+                    // Récupérer les informations d'identification
+                    const credentials = await this.getCredentials('makeHubApi');
+                    
+                    // Effectuer la requête pour récupérer les modèles
+                    const response = await this.helpers.request({
+                        method: 'GET',
+                        url: 'https://api.makehub.ai/v1/models',
+                        headers: {
+                            'Authorization': `Bearer ${credentials.apiKey}`,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                    
+                    // Vérifier que la réponse est un tableau
+                    if (!Array.isArray(response)) {
+                        throw new Error('La réponse de l\'API n\'est pas un tableau');
+                    }
+                    
+                    // Utiliser un Set pour les model_id uniques
+                    const uniqueModelIds = new Set<string>();
+                    
+                    // Ajouter chaque model_id au Set
+                    response.forEach((model: {model_id: string}) => {
+                        if (model.model_id) {
+                            uniqueModelIds.add(model.model_id);
+                        }
+                    });
+                    
+                    // Convertir le Set en tableau d'options
+                    const options: INodePropertyOptions[] = Array.from(uniqueModelIds).map((modelId) => ({
+                        name: modelId,
+                        value: modelId,
+                    }));
+                    
+                    return options;
+                } catch (error) {
+                    LoggerProxy.error('Erreur lors de la récupération des modèles:', error as Error);
+                    
+                    // Retourner une option par défaut en cas d'erreur
+                    return [
+                        {
+                            name: 'meta/Llama-3.3-70B-Instruct-fp16',
+                            value: 'meta/Llama-3.3-70B-Instruct-fp16',
+                        },
+                    ];
+                }
+            },
+        },
     };
 }
