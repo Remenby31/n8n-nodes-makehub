@@ -4,6 +4,7 @@ import {
     ILoadOptionsFunctions,
     INodePropertyOptions,
     LoggerProxy,
+    NodeOperationError,
 } from 'n8n-workflow';
 
 export class MakeHub implements INodeType {
@@ -76,7 +77,7 @@ export class MakeHub implements INodeType {
                 default: 'createCompletion',
             },
             {
-                displayName: 'Model',
+                displayName: 'Model Name or ID',
                 name: 'model',
                 type: 'options',
                 typeOptions: {
@@ -84,7 +85,7 @@ export class MakeHub implements INodeType {
                 },
                 required: true,
                 default: '',
-                description: 'ID of the model to use',
+                description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
                 displayOptions: {
                     show: {
                         resource: ['chat'],
@@ -275,7 +276,7 @@ export class MakeHub implements INodeType {
                     
                     // Vérifier que la réponse est un tableau
                     if (!Array.isArray(response)) {
-                        throw new Error('La réponse de l\'API n\'est pas un tableau');
+                        throw new NodeOperationError(this.getNode(), 'La réponse de l\'API n\'est pas un tableau');
                     }
                     
                     // Utiliser un Set pour les model_id uniques
@@ -301,7 +302,7 @@ export class MakeHub implements INodeType {
                     // Retourner une option par défaut en cas d'erreur
                     return [
                         {
-                            name: 'meta/Llama-3.3-70B-Instruct-fp16',
+                            name: 'Meta/Llama-3.3-70B-Instruct-fp16',
                             value: 'meta/Llama-3.3-70B-Instruct-fp16',
                         },
                     ];
