@@ -1,6 +1,6 @@
 import { 
     INodeType, 
-    INodeTypeDescription,
+    INodeTypeDescription, 
     NodeConnectionType,
 } from 'n8n-workflow';
 
@@ -16,8 +16,8 @@ export class MakeHub implements INodeType {
         defaults: {
             name: 'MakeHub AI',
         },
-        inputs: ['main'],
-        outputs: ['main'],
+        inputs: [{ type: NodeConnectionType.Main }],
+        outputs: [{ type: NodeConnectionType.Main }],
         credentials: [
             {
                 name: 'makeHubApi',
