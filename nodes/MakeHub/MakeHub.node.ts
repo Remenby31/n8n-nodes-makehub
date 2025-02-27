@@ -16,8 +16,13 @@ export class MakeHub implements INodeType {
         defaults: {
             name: 'MakeHub AI',
         },
-        inputs: [{ type: NodeConnectionType.Main }],
-        outputs: [{ type: NodeConnectionType.Main }],
+        inputs: [{
+            type: NodeConnectionType.Main,
+            required: true,
+        }],
+        outputs: [{
+            type: NodeConnectionType.Main,
+        }],
         credentials: [
             {
                 name: 'makeHubApi',
