@@ -41,7 +41,7 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/MakeHubApi.credentials.ts"
+      "dist/credentials/MakeHubApi.credentials.js"
     ],
     "nodes": [
       "dist/nodes/MakeHub/MakeHub.node.js"
