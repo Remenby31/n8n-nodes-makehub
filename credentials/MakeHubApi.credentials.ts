@@ -19,12 +19,12 @@ export class MakeHubApi implements ICredentialType {
             default: '',
         },
     ];
-    authenticate = {
+    authenticate: IAuthenticateGeneric = {
         type: 'generic',
         properties: {
             headers: {
                 Authorization: '=Bearer {{$credentials.apiKey}}',
             },
         },
-    } as IAuthenticateGeneric;
+    };
 }

@@ -12,8 +12,8 @@ export class MakeHub implements INodeType {
         defaults: {
             name: 'MakeHub AI',
         },
-        inputs: ['main' as NodeConnectionType],
-        outputs: ['main' as NodeConnectionType],
+        inputs: ['main'],
+        outputs: ['main'],
         credentials: [
             {
                 name: 'makeHubApi',
@@ -234,7 +234,7 @@ export class MakeHub implements INodeType {
                         name: 'stream',
                         type: 'boolean',
                         default: false,
-                        description: 'Stream back partial progress',
+                        description: 'Whether to stream back partial progress',
                         routing: {
                             send: {
                                 property: 'stream',

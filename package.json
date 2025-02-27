@@ -1,19 +1,23 @@
 {
   "name": "n8n-nodes-makehub",
-  "version": "0.1.0",
-  "description": "",
+  "version": "1.0.0",
+  "description": "N8N node to interact with MakeHub AI's LLM API for advanced language model capabilities",
   "keywords": [
-    "n8n-community-node-package"
+    "n8n",
+    "n8n-node",
+    "makehub",
+    "ai",
+    "llm"
   ],
   "license": "MIT",
-  "homepage": "",
+  "homepage": "https://github.com/Remenby31/n8n-nodes-makehub",
   "author": {
-    "name": "makehub",
-    "email": "request@makehub.ai"
+    "name": "Makehub",
+    "email": "request@email.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Remenby31/n8n-nodes-makehub.git"
+    "url": "git+https://github.com/Remenby31/n8n-nodes-makehub.git"
   },
   "engines": {
     "node": ">=18.10",
@@ -25,8 +29,8 @@
     "preinstall": "npx only-allow pnpm",
     "build": "tsc && gulp build:icons",
     "dev": "tsc --watch",
-    "format": "prettier nodes credentials --write",
-    "lint": "eslint nodes credentials package.json",
+    "format": "prettier --write .",
+    "lint": "eslint .",
     "lintfix": "eslint nodes credentials package.json --fix",
     "prepublishOnly": "pnpm build && pnpm lint -c .eslintrc.prepublish.js nodes credentials package.json"
   },
