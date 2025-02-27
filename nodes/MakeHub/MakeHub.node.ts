@@ -302,7 +302,7 @@ export class MakeHub implements INodeType {
                     // Retourner une option par défaut en cas d'erreur
                     return [
                         {
-                            name: 'Meta/Llama-3.3-70B-Instruct-fp16',
+                            name: 'Meta/Llama-3.3-70B-Instruct-Fp16',
                             value: 'meta/Llama-3.3-70B-Instruct-fp16',
                         },
                     ];
