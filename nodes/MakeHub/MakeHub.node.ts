@@ -282,15 +282,20 @@ export class MakeHub implements INodeType {
                     
                     // Logs détaillés de la réponse
                     LoggerProxy.info('Réponse reçue de l\'API MakeHub');
-                    LoggerProxy.debug('Type de la réponse:', typeof responseData);
-                    LoggerProxy.debug('Est-ce un tableau?', Array.isArray(responseData));
-                    LoggerProxy.debug('Clés de l\'objet:', Object.keys(responseData));
-                    LoggerProxy.debug('Réponse brute:', JSON.stringify(responseData, null, 2));
+                    LoggerProxy.debug('Analyse de la réponse:', {
+                        type: typeof responseData,
+                        isArray: Array.isArray(responseData),
+                        keys: Object.keys(responseData),
+                        rawData: JSON.stringify(responseData, null, 2)
+                    });
 
                     let modelsList: any[] = [];
                     
                     if (responseData && typeof responseData === 'object') {
-                        LoggerProxy.debug('Analyse de la structure de la réponse');
+                        LoggerProxy.debug('Analyse de la structure:', {
+                            hasDataProperty: !!responseData.data,
+                            hasModelsProperty: !!responseData.models,
+                        });
                         
                         if (Array.isArray(responseData)) {
                             LoggerProxy.debug('La réponse est un tableau direct');
