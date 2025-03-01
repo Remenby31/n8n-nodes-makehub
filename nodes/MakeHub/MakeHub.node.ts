@@ -281,7 +281,9 @@ export class MakeHub implements INodeType {
                     });
                     
                     LoggerProxy.info('Réponse reçue de l\'API MakeHub');
-                    LoggerProxy.debug('Structure de la réponse:', JSON.stringify(responseData).substring(0, 500) + '...');
+                    LoggerProxy.debug('Structure de la réponse:', { 
+                        preview: JSON.stringify(responseData).substring(0, 500) + '...' 
+                    });
                     
                     // Vérifier si la réponse contient une liste de modèles
                     // La réponse peut être soit un objet avec une propriété 'data', soit directement un tableau
@@ -310,7 +312,9 @@ export class MakeHub implements INodeType {
                     
                     if (modelsList.length === 0) {
                         LoggerProxy.warn('Aucun modèle trouvé dans la réponse de l\'API');
-                        LoggerProxy.debug('Contenu de la réponse:', JSON.stringify(responseData));
+                        LoggerProxy.debug('Contenu de la réponse:', { 
+                            response: responseData 
+                        });
                         return [{ name: 'Aucun modèle disponible', value: '' }];
                     }
                     
@@ -343,7 +347,9 @@ export class MakeHub implements INodeType {
                 } catch (error) {
                     LoggerProxy.error('Erreur détaillée lors de la récupération des modèles:', error as Error);
                     if (error.response) {
-                        LoggerProxy.debug('Détails de la réponse d\'erreur:', error.response.data);
+                        LoggerProxy.debug('Détails de la réponse d\'erreur:', {
+                            errorResponse: error.response.data
+                        });
                     }
                     throw new NodeOperationError(this.getNode(), `Erreur lors de la récupération des modèles: ${(error as Error).message}`);
                 }
