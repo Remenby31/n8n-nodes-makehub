@@ -24,7 +24,7 @@ Avant d’utiliser ce nœud, assurez-vous d’avoir installé :
 1. **Cloner le dépôt :**
 
    ```sh
-   git clone https://github.com/<votre-organisation>/makehub-n8n-node.git
+   git clone https://github.com/Remenby31/makehub-n8n-node.git
    ```
 
 2. **Installer les dépendances :**
