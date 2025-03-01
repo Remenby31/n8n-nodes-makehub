@@ -156,11 +156,25 @@ export class MakeHub implements INodeType {
                         ],
                     },
                 ],
+            },
+            {
+                displayName: 'Transformed Messages',
+                name: 'transformedMessages',
+                type: 'string',
+                default: '',
+                required: true,
+                displayOptions: {
+                    hide: {
+                        operation: [
+                            'createCompletion',
+                        ],
+                    },
+                },
                 routing: {
                     send: {
                         property: 'messages',
                         type: 'body',
-                        value: '={{ $parameter["messages"].messagesValues.map(msg => ({ role: msg.role, content: msg.content })) }}',
+                        value: '={{ $parameter["transformedMessages"] }}',
                     },
                 },
             },
@@ -259,6 +273,25 @@ export class MakeHub implements INodeType {
                 ],
             },
         ],
+        routing: {
+            send: {
+                preSend: [
+                    async function transformMessages(this: IExecuteFunctions): Promise<void> {
+                        const messages = this.getNodeParameter('messages', 0) as { messagesValues: { role: string; content: string }[] };
+                        if (!messages?.messagesValues?.length) return;
+
+                        const transformedMessages = await Promise.all(
+                            messages.messagesValues.map(async (msg) => ({
+                                role: msg.role,
+                                content: await this.evaluateExpression(`=${msg.content}`, 0) as string,
+                            }))
+                        );
+
+                        await this.setNodeParameter('transformedMessages', 0, transformedMessages);
+                    },
+                ],
+            },
+        },
     };
 
     methods = {
