@@ -247,32 +247,45 @@ export class MakeHub implements INodeType {
                 LoggerProxy.debug('Paramètres de base', { resource, operation });
 
                 if (resource === 'chat' && operation === 'createCompletion') {
+                    // Nouveaux logs pour la récupération des messages
+                    LoggerProxy.debug('Récupération des paramètres messages', { itemIndex: i });
                     const messages = this.getNodeParameter('messages', i) as { messagesValues: { role: string; content: string }[] };
-                    
-                    LoggerProxy.debug('Messages bruts reçus:', {
-                        hasMessages: !!messages,
-                        messagesValues: messages?.messagesValues,
-                        firstMessageContent: messages?.messagesValues?.[0]?.content
+                    LoggerProxy.debug('Structure des messages récupérés', { 
+                        hasMessages: !!messages, 
+                        hasMessagesValues: !!messages?.messagesValues,
+                        messagesCount: messages?.messagesValues?.length || 0 
                     });
                     
                     if (messages?.messagesValues?.length) {
+                        // Logs détaillés pour chaque message avant transformation
+                        messages.messagesValues.forEach((msg, idx) => {
+                            LoggerProxy.debug(`Message #${idx} avant transformation:`, {
+                                role: msg.role,
+                                content: msg.content,
+                                contentType: typeof msg.content,
+                                contentLength: msg.content.length,
+                                contentIsExpression: msg.content.includes('{{') || msg.content.includes('$')
+                            });
+                        });
+                        
                         LoggerProxy.info('Début de transformation des messages');
                         
                         const transformedMessages = await Promise.all(
                             messages.messagesValues.map(async (msg, index) => {
-                                LoggerProxy.debug('Évaluation du message', {
-                                    messageIndex: index,
-                                    originalContent: msg.content,
-                                    role: msg.role,
-                                    hasExpression: msg.content.includes('{{') || msg.content.includes('=')
+                                const expressionString = `=${msg.content}`;
+                                LoggerProxy.debug(`Préparation évaluation du message #${index}:`, {
+                                    expressionString,
+                                    originalContent: msg.content
                                 });
 
                                 try {
-                                    const evaluatedContent = await this.evaluateExpression(`=${msg.content}`, i);
-                                    LoggerProxy.debug('Résultat de l\'évaluation', {
-                                        messageIndex: index,
-                                        originalContent: msg.content,
-                                        evaluatedContent,
+                                    LoggerProxy.debug(`Appel à evaluateExpression pour message #${index}`);
+                                    const evaluatedContent = await this.evaluateExpression(expressionString, i);
+                                    
+                                    LoggerProxy.debug(`Résultat évaluation message #${index}:`, {
+                                        before: msg.content,
+                                        after: evaluatedContent,
+                                        changed: msg.content !== evaluatedContent,
                                         type: typeof evaluatedContent
                                     });
 
@@ -281,18 +294,21 @@ export class MakeHub implements INodeType {
                                         content: evaluatedContent as string,
                                     };
                                 } catch (evalError) {
-                                    LoggerProxy.error('Erreur lors de l\'évaluation de l\'expression', {
-                                        messageIndex: index,
-                                        content: msg.content,
+                                    LoggerProxy.error(`Erreur évaluation expression message #${index}:`, {
+                                        expression: expressionString,
                                         error: evalError.message,
                                         stack: evalError.stack
                                     });
-                                    throw evalError;
+                                    throw new Error(`Erreur lors de l'évaluation de l'expression '${msg.content}': ${evalError.message}`);
                                 }
                             })
                         );
 
-                        LoggerProxy.debug('Messages transformés:', transformedMessages);
+                        // Log final après transformation
+                        LoggerProxy.debug('Tous les messages après transformation:', {
+                            original: messages.messagesValues.map(m => ({ role: m.role, content: m.content })),
+                            transformed: transformedMessages
+                        });
 
                         const body = {
                             model: this.getNodeParameter('model', i),
