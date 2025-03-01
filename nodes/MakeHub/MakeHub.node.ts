@@ -63,13 +63,13 @@ export class MakeHub implements INodeType {
                 },
                 options: [
                     {
-                        name: 'Message a Model',
-                        value: 'createCompletion',
-                        action: 'Create completion',
+                        name: 'Message Model',
+                        value: 'messageModel',
+                        action: 'Message a model',
                         description: 'Create a completion with any LLM model',
                     },
                 ],
-                default: 'createCompletion',
+                default: 'messageModel',
             },
             {
                 displayName: 'Model Name or ID',
@@ -84,7 +84,7 @@ export class MakeHub implements INodeType {
                 displayOptions: {
                     show: {
                         resource: ['chat'],
-                        operation: ['createCompletion'],
+                        operation: ['messageModel'],
                     },
                 },
             },
@@ -102,7 +102,7 @@ export class MakeHub implements INodeType {
                 displayOptions: {
                     show: {
                         resource: ['chat'],
-                        operation: ['createCompletion'],
+                        operation: ['messageModel'],
                     },
                 },
                 options: [
@@ -155,7 +155,7 @@ export class MakeHub implements INodeType {
                 displayOptions: {
                     hide: {
                         operation: [
-                            'createCompletion',
+                            'messageModel',
                         ],
                     },
                 },
@@ -169,7 +169,7 @@ export class MakeHub implements INodeType {
                 displayOptions: {
                     show: {
                         resource: ['chat'],
-                        operation: ['createCompletion'],
+                        operation: ['messageModel'],
                     },
                 },
                 options: [
@@ -198,7 +198,7 @@ export class MakeHub implements INodeType {
                 displayOptions: {
                     show: {
                         resource: ['chat'],
-                        operation: ['createCompletion'],
+                        operation: ['messageModel'],
                     },
                 },
                 options: [
@@ -246,7 +246,7 @@ export class MakeHub implements INodeType {
 
                 LoggerProxy.debug('Paramètres de base', { resource, operation });
 
-                if (resource === 'chat' && operation === 'createCompletion') {
+                if (resource === 'chat' && operation === 'messageModel') {
                     // Nouveaux logs pour la récupération des messages
                     LoggerProxy.debug('Récupération des paramètres messages', { itemIndex: i });
                     const messages = this.getNodeParameter('messages', i) as { messagesValues: { role: string; content: string }[] };
