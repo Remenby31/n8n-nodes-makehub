@@ -160,12 +160,7 @@ export class MakeHub implements INodeType {
                     send: {
                         property: 'messages',
                         type: 'body',
-                        preSend: [
-                            {
-                                type: 'set',
-                                value: '={{ $parameter["messages"].messagesValues.map(msg => ({ role: msg.role, content: msg.content })) }}',
-                            },
-                        ],
+                        value: '={{ $parameter["messages"].messagesValues.map(msg => ({ role: msg.role, content: msg.content })) }}',
                     },
                 },
             },
