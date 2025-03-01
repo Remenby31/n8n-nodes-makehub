@@ -315,7 +315,7 @@ export class MakeHub implements INodeType {
                         LoggerProxy.debug('Contenu de la réponse:', { 
                             response: responseData 
                         });
-                        return [{ name: 'Aucun modèle disponible', value: '' }];
+                        return [{ name: 'Aucun Modèle Disponible', value: '' }];
                     }
                     
                     // Utiliser un Set pour les model_id uniques
@@ -333,7 +333,7 @@ export class MakeHub implements INodeType {
                     
                     if (uniqueModelIds.size === 0) {
                         LoggerProxy.warn('Aucun identifiant de modèle trouvé dans les données');
-                        return [{ name: 'Format de modèle non reconnu', value: '' }];
+                        return [{ name: 'Format De Modèle Non Reconnu', value: '' }];
                     }
                     
                     // Convertir le Set en tableau d'options
