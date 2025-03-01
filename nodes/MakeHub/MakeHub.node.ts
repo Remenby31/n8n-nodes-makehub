@@ -286,7 +286,7 @@ export class MakeHub implements INodeType {
                     });
                     
                     // Vérifier si la réponse contient une liste de modèles
-                    // La réponse peut être soit un objet avec une propriété 'data', soit directement un tableau
+                    // La réponse peut être soit un objet avec une propriété 'data', soit directement un tableau.
                     let modelsList: any[] = [];
                     
                     if (responseData && typeof responseData === 'object') {
