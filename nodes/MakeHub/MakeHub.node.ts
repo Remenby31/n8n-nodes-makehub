@@ -299,7 +299,14 @@ export class MakeHub implements INodeType {
                                         error: evalError.message,
                                         stack: evalError.stack
                                     });
-                                    throw new Error(`Erreur lors de l'évaluation de l'expression '${msg.content}': ${evalError.message}`);
+                                    throw new NodeOperationError(
+                                        this.getNode(),
+                                        `Erreur lors de l'évaluation de l'expression '${msg.content}': ${evalError.message}`,
+                                        {
+                                            description: `Une erreur s'est produite lors de l'évaluation de l'expression dans le message #${index}`,
+                                            itemIndex: i,
+                                        }
+                                    );
                                 }
                             })
                         );
