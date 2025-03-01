@@ -63,8 +63,8 @@ export class MakeHub implements INodeType {
                 options: [
                     {
                         name: 'Message a Model',
-                        value: 'createCompletion',
-                        action: 'Message a model',
+                        value: 'Message Model',
+                        action: 'Message model',
                         description: 'Create a completion with any LLM model',
                         routing: {
                             request: {
@@ -148,6 +148,10 @@ export class MakeHub implements INodeType {
                                 type: 'string',
                                 default: '',
                                 description: 'The content of the message',
+                                typeOptions: {
+                                    rows: 4,
+                                },
+                                noDataExpression: false,
                             },
                         ],
                     },
@@ -156,7 +160,12 @@ export class MakeHub implements INodeType {
                     send: {
                         property: 'messages',
                         type: 'body',
-                        value: '={{ $parameter["messages"].messagesValues }}',
+                        preSend: [
+                            {
+                                type: 'set',
+                                value: '={{ $parameter["messages"].messagesValues.map(msg => ({ role: msg.role, content: msg.content })) }}',
+                            },
+                        ],
                     },
                 },
             },
