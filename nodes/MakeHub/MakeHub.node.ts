@@ -272,15 +272,24 @@ export class MakeHub implements INodeType {
                         
                         const transformedMessages = await Promise.all(
                             messages.messagesValues.map(async (msg, index) => {
-                                const expressionString = `=${msg.content}`;
+                                // Ne pas ajouter "=" si le contenu ne contient pas d'expression
+                                const hasExpression = msg.content.includes('{{') || msg.content.includes('$');
+                                const expressionString = hasExpression ? `=${msg.content}` : msg.content;
+                                
                                 LoggerProxy.debug(`Préparation évaluation du message #${index}:`, {
                                     expressionString,
-                                    originalContent: msg.content
+                                    originalContent: msg.content,
+                                    hasExpression
                                 });
 
                                 try {
-                                    LoggerProxy.debug(`Appel à evaluateExpression pour message #${index}`);
-                                    const evaluatedContent = await this.evaluateExpression(expressionString, i);
+                                    let evaluatedContent;
+                                    if (hasExpression) {
+                                        LoggerProxy.debug(`Appel à evaluateExpression pour message #${index}`);
+                                        evaluatedContent = await this.evaluateExpression(expressionString, i);
+                                    } else {
+                                        evaluatedContent = expressionString;
+                                    }
                                     
                                     LoggerProxy.debug(`Résultat évaluation message #${index}:`, {
                                         before: msg.content,
