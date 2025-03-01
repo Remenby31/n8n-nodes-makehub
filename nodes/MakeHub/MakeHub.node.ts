@@ -264,12 +264,12 @@ export class MakeHub implements INodeType {
                     LoggerProxy.info('Début de récupération des modèles MakeHub');
                     const credentials = await this.getCredentials('makeHubApi');
                     
-                    if (!credentials.apiKey) {
-                        LoggerProxy.error('Clé API manquante dans les credentials');
-                        throw new NodeOperationError(this.getNode(), 'Clé API manquante');
-                    }
+                    // Log avant la requête
+                    LoggerProxy.debug('Envoi de requête avec headers:', {
+                        baseUrl: 'https://api.makehub.ai/v1/models',
+                        hasApiKey: !!credentials.apiKey
+                    });
                     
-                    LoggerProxy.info('Envoi de requête à l\'API MakeHub');
                     const responseData = await this.helpers.request({
                         method: 'GET',
                         url: 'https://api.makehub.ai/v1/models',
@@ -280,78 +280,82 @@ export class MakeHub implements INodeType {
                         json: true,
                     });
                     
+                    // Logs détaillés de la réponse
                     LoggerProxy.info('Réponse reçue de l\'API MakeHub');
-                    LoggerProxy.debug('Structure de la réponse:', { 
-                        preview: JSON.stringify(responseData).substring(0, 500) + '...' 
-                    });
-                    
-                    // Vérifier si la réponse contient une liste de modèles
-                    // La réponse peut être soit un objet avec une propriété 'data', soit directement un tableau.
+                    LoggerProxy.debug('Type de la réponse:', typeof responseData);
+                    LoggerProxy.debug('Est-ce un tableau?', Array.isArray(responseData));
+                    LoggerProxy.debug('Clés de l\'objet:', Object.keys(responseData));
+                    LoggerProxy.debug('Réponse brute:', JSON.stringify(responseData, null, 2));
+
                     let modelsList: any[] = [];
                     
                     if (responseData && typeof responseData === 'object') {
+                        LoggerProxy.debug('Analyse de la structure de la réponse');
+                        
                         if (Array.isArray(responseData)) {
-                            // Si la réponse est directement un tableau
+                            LoggerProxy.debug('La réponse est un tableau direct');
                             modelsList = responseData;
                         } else if (responseData.data && Array.isArray(responseData.data)) {
-                            // Si la réponse est un objet avec une propriété 'data' qui est un tableau
+                            LoggerProxy.debug('La réponse contient un tableau dans data');
                             modelsList = responseData.data;
+                        } else if (responseData.models && Array.isArray(responseData.models)) {
+                            LoggerProxy.debug('La réponse contient un tableau dans models');
+                            modelsList = responseData.models;
                         } else {
-                            // Chercher d'autres propriétés qui pourraient contenir la liste des modèles
-                            const possibleArrayProps = Object.keys(responseData).find(key => 
-                                Array.isArray(responseData[key]) && 
-                                responseData[key].length > 0 && 
-                                responseData[key][0].model_id
-                            );
-                            
-                            if (possibleArrayProps) {
-                                modelsList = responseData[possibleArrayProps];
+                            // Parcourir toutes les propriétés pour trouver un tableau
+                            LoggerProxy.debug('Recherche d\'un tableau dans les propriétés');
+                            for (const [key, value] of Object.entries(responseData)) {
+                                if (Array.isArray(value)) {
+                                    LoggerProxy.debug(`Tableau trouvé dans la propriété: ${key}`);
+                                    modelsList = value;
+                                    break;
+                                }
                             }
                         }
                     }
-                    
+
+                    LoggerProxy.debug('Structure des modèles trouvés:', {
+                        nombreModeles: modelsList.length,
+                        premierElement: modelsList.length > 0 ? modelsList[0] : null
+                    });
+
                     if (modelsList.length === 0) {
-                        LoggerProxy.warn('Aucun modèle trouvé dans la réponse de l\'API');
-                        LoggerProxy.debug('Contenu de la réponse:', { 
-                            response: responseData 
-                        });
+                        LoggerProxy.warn('Aucun modèle trouvé dans la réponse');
                         return [{ name: 'Aucun Modèle Disponible', value: '' }];
                     }
-                    
-                    // Utiliser un Set pour les model_id uniques
-                    const uniqueModelIds = new Set<string>();
-                    
-                    // Ajouter chaque model_id au Set
-                    modelsList.forEach((model: any) => {
-                        if (model && model.model_id) {
-                            uniqueModelIds.add(model.model_id);
-                        } else if (model && model.id) {
-                            // Alternative: l'identifiant pourrait être dans la propriété 'id'
-                            uniqueModelIds.add(model.id);
-                        }
-                    });
-                    
-                    if (uniqueModelIds.size === 0) {
-                        LoggerProxy.warn('Aucun identifiant de modèle trouvé dans les données');
-                        return [{ name: 'Format De Modèle Non Reconnu', value: '' }];
-                    }
-                    
-                    // Convertir le Set en tableau d'options
-                    const options: INodePropertyOptions[] = Array.from(uniqueModelIds).map((modelId) => ({
-                        name: modelId,
-                        value: modelId,
-                    }));
-                    
-                    LoggerProxy.info(`${options.length} modèles récupérés avec succès`);
+
+                    const options: INodePropertyOptions[] = modelsList.map((model: any) => {
+                        const modelId = model.model_id || model.id || model.name;
+                        LoggerProxy.debug('Traitement du modèle:', { modelId, modelData: model });
+                        return {
+                            name: modelId,
+                            value: modelId,
+                        };
+                    }).filter((option): option is INodePropertyOptions => !!option.value);
+
+                    LoggerProxy.info(`${options.length} modèles convertis en options`);
+                    LoggerProxy.debug('Options finales:', options);
+
                     return options;
                 } catch (error) {
-                    LoggerProxy.error('Erreur détaillée lors de la récupération des modèles:', error as Error);
-                    if (error.response) {
+                    LoggerProxy.error('Erreur lors de la récupération des modèles:', {
+                        message: (error as Error).message,
+                        stack: (error as Error).stack,
+                    });
+                    
+                    if ('response' in error) {
                         LoggerProxy.debug('Détails de la réponse d\'erreur:', {
-                            errorResponse: error.response.data
+                            status: error.response?.status,
+                            statusText: error.response?.statusText,
+                            data: error.response?.data,
+                            headers: error.response?.headers,
                         });
                     }
-                    throw new NodeOperationError(this.getNode(), `Erreur lors de la récupération des modèles: ${(error as Error).message}`);
+                    
+                    throw new NodeOperationError(
+                        this.getNode(),
+                        `Erreur lors de la récupération des modèles: ${(error as Error).message}`
+                    );
                 }
             },
         },
