@@ -270,30 +270,67 @@ export class MakeHub implements INodeType {
                     }
                     
                     LoggerProxy.info('Envoi de requête à l\'API MakeHub');
-                    const response = await this.helpers.request({
+                    const responseData = await this.helpers.request({
                         method: 'GET',
                         url: 'https://api.makehub.ai/v1/models',
                         headers: {
                             'Authorization': `Bearer ${credentials.apiKey}`,
                             'Content-Type': 'application/json',
                         },
+                        json: true,
                     });
                     
                     LoggerProxy.info('Réponse reçue de l\'API MakeHub');
-                    // Vérifier que la réponse est un tableau
-                    if (!Array.isArray(response)) {
-                        throw new NodeOperationError(this.getNode(), 'La réponse de l\'API n\'est pas un tableau');
+                    LoggerProxy.debug('Structure de la réponse:', JSON.stringify(responseData).substring(0, 500) + '...');
+                    
+                    // Vérifier si la réponse contient une liste de modèles
+                    // La réponse peut être soit un objet avec une propriété 'data', soit directement un tableau
+                    let modelsList: any[] = [];
+                    
+                    if (responseData && typeof responseData === 'object') {
+                        if (Array.isArray(responseData)) {
+                            // Si la réponse est directement un tableau
+                            modelsList = responseData;
+                        } else if (responseData.data && Array.isArray(responseData.data)) {
+                            // Si la réponse est un objet avec une propriété 'data' qui est un tableau
+                            modelsList = responseData.data;
+                        } else {
+                            // Chercher d'autres propriétés qui pourraient contenir la liste des modèles
+                            const possibleArrayProps = Object.keys(responseData).find(key => 
+                                Array.isArray(responseData[key]) && 
+                                responseData[key].length > 0 && 
+                                responseData[key][0].model_id
+                            );
+                            
+                            if (possibleArrayProps) {
+                                modelsList = responseData[possibleArrayProps];
+                            }
+                        }
+                    }
+                    
+                    if (modelsList.length === 0) {
+                        LoggerProxy.warn('Aucun modèle trouvé dans la réponse de l\'API');
+                        LoggerProxy.debug('Contenu de la réponse:', JSON.stringify(responseData));
+                        return [{ name: 'Aucun modèle disponible', value: '' }];
                     }
                     
                     // Utiliser un Set pour les model_id uniques
                     const uniqueModelIds = new Set<string>();
                     
                     // Ajouter chaque model_id au Set
-                    response.forEach((model: {model_id: string}) => {
-                        if (model.model_id) {
+                    modelsList.forEach((model: any) => {
+                        if (model && model.model_id) {
                             uniqueModelIds.add(model.model_id);
+                        } else if (model && model.id) {
+                            // Alternative: l'identifiant pourrait être dans la propriété 'id'
+                            uniqueModelIds.add(model.id);
                         }
                     });
+                    
+                    if (uniqueModelIds.size === 0) {
+                        LoggerProxy.warn('Aucun identifiant de modèle trouvé dans les données');
+                        return [{ name: 'Format de modèle non reconnu', value: '' }];
+                    }
                     
                     // Convertir le Set en tableau d'options
                     const options: INodePropertyOptions[] = Array.from(uniqueModelIds).map((modelId) => ({
@@ -301,9 +338,13 @@ export class MakeHub implements INodeType {
                         value: modelId,
                     }));
                     
+                    LoggerProxy.info(`${options.length} modèles récupérés avec succès`);
                     return options;
                 } catch (error) {
                     LoggerProxy.error('Erreur détaillée lors de la récupération des modèles:', error as Error);
+                    if (error.response) {
+                        LoggerProxy.debug('Détails de la réponse d\'erreur:', error.response.data);
+                    }
                     throw new NodeOperationError(this.getNode(), `Erreur lors de la récupération des modèles: ${(error as Error).message}`);
                 }
             },
