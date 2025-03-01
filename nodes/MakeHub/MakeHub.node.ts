@@ -5,6 +5,7 @@ import {
     INodePropertyOptions,
     LoggerProxy,
     NodeOperationError,
+    IExecuteFunctions,
 } from 'n8n-workflow';
 
 export class MakeHub implements INodeType {
@@ -66,12 +67,6 @@ export class MakeHub implements INodeType {
                         value: 'createCompletion',
                         action: 'Create completion',
                         description: 'Create a completion with any LLM model',
-                        routing: {
-                            request: {
-                                method: 'POST',
-                                url: '/chat/completions',
-                            },
-                        },
                     },
                 ],
                 default: 'createCompletion',
@@ -90,12 +85,6 @@ export class MakeHub implements INodeType {
                     show: {
                         resource: ['chat'],
                         operation: ['createCompletion'],
-                    },
-                },
-                routing: {
-                    send: {
-                        property: 'model',
-                        type: 'body',
                     },
                 },
             },
@@ -170,13 +159,6 @@ export class MakeHub implements INodeType {
                         ],
                     },
                 },
-                routing: {
-                    send: {
-                        property: 'messages',
-                        type: 'body',
-                        value: '={{ $parameter["transformedMessages"] }}',
-                    },
-                },
             },
             {
                 displayName: 'Performance Settings',
@@ -206,13 +188,6 @@ export class MakeHub implements INodeType {
                         description: 'Maximum latency in milliseconds',
                     },
                 ],
-                routing: {
-                    send: {
-                        property: 'extra_query',
-                        type: 'body',
-                        value: '={{ { "min_throughput": $parameter["performanceSettings"]["minThroughput"] ? $parameter["performanceSettings"]["minThroughput"].toString() : undefined, "max_latency": $parameter["performanceSettings"]["maxLatency"] ? $parameter["performanceSettings"]["maxLatency"].toString() : undefined } }}',
-                    },
-                },
             },
             {
                 displayName: 'Additional Fields',
@@ -233,12 +208,6 @@ export class MakeHub implements INodeType {
                         type: 'number',
                         default: 1024,
                         description: 'Maximum number of tokens to generate',
-                        routing: {
-                            send: {
-                                property: 'max_tokens',
-                                type: 'body',
-                            },
-                        },
                     },
                     {
                         displayName: 'Temperature',
@@ -250,12 +219,6 @@ export class MakeHub implements INodeType {
                         },
                         default: 1,
                         description: 'Controls randomness. Lower is more deterministic, higher is more random.',
-                        routing: {
-                            send: {
-                                property: 'temperature',
-                                type: 'body',
-                            },
-                        },
                     },
                     {
                         displayName: 'Stream',
@@ -263,36 +226,89 @@ export class MakeHub implements INodeType {
                         type: 'boolean',
                         default: false,
                         description: 'Whether to stream back partial progress',
-                        routing: {
-                            send: {
-                                property: 'stream',
-                                type: 'body',
-                            },
-                        },
                     },
                 ],
             },
         ],
-        routing: {
-            send: {
-                preSend: [
-                    async function transformMessages(this: IExecuteFunctions): Promise<void> {
-                        const messages = this.getNodeParameter('messages', 0) as { messagesValues: { role: string; content: string }[] };
-                        if (!messages?.messagesValues?.length) return;
+    };
 
+    async execute(this: IExecuteFunctions) {
+        const items = this.getInputData();
+        const returnData = [];
+
+        for (let i = 0; i < items.length; i++) {
+            try {
+                const resource = this.getNodeParameter('resource', i) as string;
+                const operation = this.getNodeParameter('operation', i) as string;
+
+                if (resource === 'chat' && operation === 'createCompletion') {
+                    const messages = this.getNodeParameter('messages', i) as { messagesValues: { role: string; content: string }[] };
+                    
+                    if (messages?.messagesValues?.length) {
                         const transformedMessages = await Promise.all(
                             messages.messagesValues.map(async (msg) => ({
                                 role: msg.role,
-                                content: await this.evaluateExpression(`=${msg.content}`, 0) as string,
+                                content: await this.evaluateExpression(`=${msg.content}`, i) as string,
                             }))
                         );
 
-                        await this.setNodeParameter('transformedMessages', 0, transformedMessages);
-                    },
-                ],
-            },
-        },
-    };
+                        const body = {
+                            model: this.getNodeParameter('model', i),
+                            messages: transformedMessages,
+                        };
+
+                        // Add additional fields if they exist
+                        const additionalFields = this.getNodeParameter('additionalFields', i, {}) as {
+                            maxTokens?: number;
+                            temperature?: number;
+                            stream?: boolean;
+                        };
+
+                        Object.assign(body, {
+                            max_tokens: additionalFields.maxTokens,
+                            temperature: additionalFields.temperature,
+                            stream: additionalFields.stream,
+                        });
+
+                        // Add performance settings if they exist
+                        const performanceSettings = this.getNodeParameter('performanceSettings', i, {}) as {
+                            minThroughput?: number;
+                            maxLatency?: number;
+                        };
+
+                        if (performanceSettings.minThroughput || performanceSettings.maxLatency) {
+                            Object.assign(body, {
+                                extra_query: {
+                                    min_throughput: performanceSettings.minThroughput?.toString(),
+                                    max_latency: performanceSettings.maxLatency?.toString(),
+                                },
+                            });
+                        }
+
+                        const response = await this.helpers.httpRequest({
+                            method: 'POST',
+                            url: 'https://api.makehub.ai/v1/chat/completions',
+                            body,
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${(await this.getCredentials('makeHubApi')).apiKey}`,
+                            },
+                        });
+
+                        returnData.push(response);
+                    }
+                }
+            } catch (error) {
+                if (this.continueOnFail()) {
+                    returnData.push({ error: error.message });
+                    continue;
+                }
+                throw error;
+            }
+        }
+
+        return [this.helpers.returnJsonArray(returnData)];
+    }
 
     methods = {
         loadOptions: {
