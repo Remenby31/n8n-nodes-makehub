@@ -261,10 +261,15 @@ export class MakeHub implements INodeType {
         loadOptions: {
             async getModels(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
                 try {
-                    // Récupérer les informations d'identification
+                    LoggerProxy.info('Début de récupération des modèles MakeHub');
                     const credentials = await this.getCredentials('makeHubApi');
                     
-                    // Effectuer la requête pour récupérer les modèles
+                    if (!credentials.apiKey) {
+                        LoggerProxy.error('Clé API manquante dans les credentials');
+                        throw new NodeOperationError(this.getNode(), 'Clé API manquante');
+                    }
+                    
+                    LoggerProxy.info('Envoi de requête à l\'API MakeHub');
                     const response = await this.helpers.request({
                         method: 'GET',
                         url: 'https://api.makehub.ai/v1/models',
@@ -274,6 +279,7 @@ export class MakeHub implements INodeType {
                         },
                     });
                     
+                    LoggerProxy.info('Réponse reçue de l\'API MakeHub');
                     // Vérifier que la réponse est un tableau
                     if (!Array.isArray(response)) {
                         throw new NodeOperationError(this.getNode(), 'La réponse de l\'API n\'est pas un tableau');
@@ -297,15 +303,8 @@ export class MakeHub implements INodeType {
                     
                     return options;
                 } catch (error) {
-                    LoggerProxy.error('Erreur lors de la récupération des modèles:', error as Error);
-                    
-                    // Retourner une option par défaut en cas d'erreur
-                    return [
-                        {
-                            name: 'Meta/Llama-3.3-70B-Instruct-Fp16',
-                            value: 'meta/Llama-3.3-70B-Instruct-fp16',
-                        },
-                    ];
+                    LoggerProxy.error('Erreur détaillée lors de la récupération des modèles:', error as Error);
+                    throw new NodeOperationError(this.getNode(), `Erreur lors de la récupération des modèles: ${(error as Error).message}`);
                 }
             },
         },
