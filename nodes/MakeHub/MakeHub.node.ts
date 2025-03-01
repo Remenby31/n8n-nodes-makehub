@@ -74,7 +74,7 @@ export class MakeHub implements INodeType {
                         },
                     },
                 ],
-                default: 'createCompletion',
+                default: 'Message Model',
             },
             {
                 displayName: 'Model Name or ID',
