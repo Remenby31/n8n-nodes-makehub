@@ -1,46 +1,94 @@
-![Banner image](https://user-images.githubusercontent.com/10284570/173569848-c624317f-42b1-45a6-ab09-f0ea3c247648.png)
+![n8n-nodes-starter](https://user-images.githubusercontent.com/10284570/173569848-c624317f-42b1-45a6-ab09-f0ea3c247648.png)
 
-# n8n-nodes-starter
+# MakeHub AI n8n Node
 
-This repo contains example nodes to help you get started building your own custom integrations for [n8n](n8n.io). It includes the node linter and other dependencies.
+Ce dépôt contient le nœud personnalisé **MakeHub AI** pour n8n, permettant d’interagir avec l’API MakeHub AI LLM. Grâce à ce nœud, vous pouvez envoyer des messages de chat à un modèle LLM, transformer dynamiquement leur contenu et ajuster des paramètres de performance pour optimiser vos requêtes.
 
-To make your custom node available to the community, you must create it as an npm package, and [submit it to the npm registry](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry).
+## Fonctionnalités
 
-## Prerequisites
+- **Interaction de Chat** : Envoyez des messages à l’API MakeHub AI pour obtenir des réponses générées par un modèle LLM.
+- **Transformation Dynamique des Messages** : Évaluez des expressions intégrées dans le contenu des messages pour personnaliser vos requêtes.
+- **Paramètres de Performance** : Configurez le débit minimum (tokens/sec) et la latence maximale (ms) pour optimiser vos échanges.
+- **Champs Additionnels Personnalisables** : Ajustez le nombre maximal de tokens, la température (pour contrôler la variabilité) et activez ou non le mode stream.
 
-You need the following installed on your development machine:
+## Prérequis
 
-* [git](https://git-scm.com/downloads)
-* Node.js and pnpm. Minimum version Node 18. You can find instructions on how to install both using nvm (Node Version Manager) for Linux, Mac, and WSL [here](https://github.com/nvm-sh/nvm). For Windows users, refer to Microsoft's guide to [Install NodeJS on Windows](https://docs.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-windows).
-* Install n8n with:
-  ```
-  pnpm install n8n -g
-  ```
-* Recommended: follow n8n's guide to [set up your development environment](https://docs.n8n.io/integrations/creating-nodes/build/node-development-environment/).
+Avant d’utiliser ce nœud, assurez-vous d’avoir installé :
 
-## Using this starter
+- [n8n](https://n8n.io) – (Consultez la [documentation officielle](https://docs.n8n.io/) pour l’installation et la configuration.)
+- Node.js (version 18 minimum) et pnpm.
+- [Git](https://git-scm.com/downloads).
 
-These are the basic steps for working with the starter. For detailed guidance on creating and publishing nodes, refer to the [documentation](https://docs.n8n.io/integrations/creating-nodes/).
+## Installation
 
-1. [Generate a new repository](https://github.com/n8n-io/n8n-nodes-starter/generate) from this template repository.
-2. Clone your new repo:
+1. **Cloner le dépôt :**
+
+   ```sh
+   git clone https://github.com/<votre-organisation>/makehub-n8n-node.git
    ```
-   git clone https://github.com/<your organization>/<your-repo-name>.git
+
+2. **Installer les dépendances :**
+
+   ```sh
+   pnpm install
    ```
-3. Run `pnpm i` to install dependencies.
-4. Open the project in your editor.
-5. Browse the examples in `/nodes` and `/credentials`. Modify the examples, or replace them with your own nodes.
-6. Update the `package.json` to match your details.
-7. Run `pnpm lint` to check for errors or `pnpm lintfix` to automatically fix errors when possible.
-8. Test your node locally. Refer to [Run your node locally](https://docs.n8n.io/integrations/creating-nodes/test/run-node-locally/) for guidance.
-9. Replace this README with documentation for your node. Use the [README_TEMPLATE](README_TEMPLATE.md) to get started.
-10. Update the LICENSE file to use your details.
-11. [Publish](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry) your package to npm.
 
-## More information
+3. **Construire et configurer le nœud :**
 
-Refer to our [documentation on creating nodes](https://docs.n8n.io/integrations/creating-nodes/) for detailed information on building your own nodes.
+   Adaptez et compilez le nœud selon vos besoins. Pour cela, reportez-vous à la [documentation n8n sur le développement de nœuds](https://docs.n8n.io/integrations/creating-nodes/build/node-development-environment/).
 
-## License
+## Configuration
 
-[MIT](https://github.com/n8n-io/n8n-nodes-starter/blob/master/LICENSE.md)
+### Credentials
+
+Le nœud **MakeHub AI** nécessite des credentials valides pour l’API MakeHub. Créez un credential nommé **makeHubApi** comportant :
+
+- **API Key** : Votre clé API MakeHub.
+
+Assurez-vous de configurer ces credentials dans n8n. Pour plus d’informations, consultez la [documentation sur les credentials](https://docs.n8n.io/integrations/creating-nodes/credentials/).
+
+### Paramètres du Nœud
+
+Lors de la configuration du nœud dans votre workflow, vous trouverez les options suivantes :
+
+- **Resource** : Fixé à `Chat`.
+- **Operation** : `Message Model` – Cette opération permet d’envoyer des messages à un modèle LLM.
+- **Model Name or ID** : Sélectionnez ou spécifiez l’identifiant du modèle LLM à utiliser.
+- **Messages** : Ajoutez un ou plusieurs messages à envoyer. Chaque message comporte :
+  - **Role** : Le rôle de l’expéditeur (`assistant`, `system` ou `user`).
+  - **Content** : Le contenu du message. Ce champ supporte les expressions pour une évaluation dynamique.
+- **Performance Settings** (Paramètres de performance) :
+  - **Min Throughput** : Débit minimum en tokens/sec.
+  - **Max Latency** : Latence maximale en millisecondes.
+- **Additional Fields** (Champs additionnels) :
+  - **Max Tokens** : Nombre maximal de tokens à générer.
+  - **Temperature** : Contrôle la variabilité de la réponse (plus bas = plus déterministe, plus haut = plus aléatoire).
+  - **Stream** : Active ou désactive la réponse en mode stream.
+
+## Exemple d’Utilisation
+
+1. **Créez un nouveau workflow dans n8n.**
+2. **Ajoutez le nœud MakeHub AI** et configurez-le avec vos paramètres souhaités.
+3. **Configurez les credentials** (**makeHubApi**) avec votre clé API MakeHub.
+4. **Intégrez le nœud** dans votre workflow pour traiter et exploiter les réponses de l’API MakeHub.
+
+## Tests et Débogage
+
+Testez votre nœud en local en suivant les conseils de la [documentation sur l’exécution locale des nœuds](https://docs.n8n.io/integrations/creating-nodes/test/run-node-locally/). Les logs détaillés (via LoggerProxy) vous aideront à déboguer et suivre l’exécution de chaque étape.
+
+## Personnalisation
+
+Vous pouvez adapter le code du nœud (situé dans le répertoire `/nodes`) pour répondre à vos besoins spécifiques. Pensez à mettre à jour le fichier `package.json` et cette documentation en conséquence.
+
+## Publication
+
+Une fois testé et validé, vous pouvez publier ce nœud sous forme de package npm pour le partager avec la communauté n8n. Reportez-vous aux [guidelines de publication sur npm](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry).
+
+## Licence
+
+Ce projet est sous licence [MIT](LICENSE).
+
+---
+
+Pour plus d’informations sur la création de nœuds personnalisés pour n8n, consultez la [documentation officielle](https://docs.n8n.io/integrations/creating-nodes/).
+
