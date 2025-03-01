@@ -236,26 +236,70 @@ export class MakeHub implements INodeType {
         const items = this.getInputData();
         const returnData = [];
 
+        LoggerProxy.info('Démarrage de l\'exécution du nœud MakeHub');
+
         for (let i = 0; i < items.length; i++) {
             try {
+                LoggerProxy.debug('Traitement de l\'item', { itemIndex: i });
                 const resource = this.getNodeParameter('resource', i) as string;
                 const operation = this.getNodeParameter('operation', i) as string;
+
+                LoggerProxy.debug('Paramètres de base', { resource, operation });
 
                 if (resource === 'chat' && operation === 'createCompletion') {
                     const messages = this.getNodeParameter('messages', i) as { messagesValues: { role: string; content: string }[] };
                     
+                    LoggerProxy.debug('Messages bruts reçus:', {
+                        hasMessages: !!messages,
+                        messagesValues: messages?.messagesValues,
+                        firstMessageContent: messages?.messagesValues?.[0]?.content
+                    });
+                    
                     if (messages?.messagesValues?.length) {
+                        LoggerProxy.info('Début de transformation des messages');
+                        
                         const transformedMessages = await Promise.all(
-                            messages.messagesValues.map(async (msg) => ({
-                                role: msg.role,
-                                content: await this.evaluateExpression(`=${msg.content}`, i) as string,
-                            }))
+                            messages.messagesValues.map(async (msg, index) => {
+                                LoggerProxy.debug('Évaluation du message', {
+                                    messageIndex: index,
+                                    originalContent: msg.content,
+                                    role: msg.role,
+                                    hasExpression: msg.content.includes('{{') || msg.content.includes('=')
+                                });
+
+                                try {
+                                    const evaluatedContent = await this.evaluateExpression(`=${msg.content}`, i);
+                                    LoggerProxy.debug('Résultat de l\'évaluation', {
+                                        messageIndex: index,
+                                        originalContent: msg.content,
+                                        evaluatedContent,
+                                        type: typeof evaluatedContent
+                                    });
+
+                                    return {
+                                        role: msg.role,
+                                        content: evaluatedContent as string,
+                                    };
+                                } catch (evalError) {
+                                    LoggerProxy.error('Erreur lors de l\'évaluation de l\'expression', {
+                                        messageIndex: index,
+                                        content: msg.content,
+                                        error: evalError.message,
+                                        stack: evalError.stack
+                                    });
+                                    throw evalError;
+                                }
+                            })
                         );
+
+                        LoggerProxy.debug('Messages transformés:', transformedMessages);
 
                         const body = {
                             model: this.getNodeParameter('model', i),
                             messages: transformedMessages,
                         };
+
+                        LoggerProxy.debug('Corps de la requête construit:', body);
 
                         // Add additional fields if they exist
                         const additionalFields = this.getNodeParameter('additionalFields', i, {}) as {
@@ -295,10 +339,17 @@ export class MakeHub implements INodeType {
                             },
                         });
 
+                        LoggerProxy.debug('Réponse reçue de l\'API:', response);
                         returnData.push(response);
                     }
                 }
             } catch (error) {
+                LoggerProxy.error('Erreur pendant l\'exécution:', {
+                    message: error.message,
+                    stack: error.stack,
+                    itemIndex: i
+                });
+
                 if (this.continueOnFail()) {
                     returnData.push({ error: error.message });
                     continue;
@@ -307,6 +358,7 @@ export class MakeHub implements INodeType {
             }
         }
 
+        LoggerProxy.info('Exécution terminée avec succès');
         return [this.helpers.returnJsonArray(returnData)];
     }
 
