@@ -63,8 +63,8 @@ export class MakeHub implements INodeType {
                 options: [
                     {
                         name: 'Message a Model',
-                        value: 'Message Model',
-                        action: 'Message model',
+                        value: 'createCompletion',
+                        action: 'Create completion',
                         description: 'Create a completion with any LLM model',
                         routing: {
                             request: {
@@ -74,7 +74,7 @@ export class MakeHub implements INodeType {
                         },
                     },
                 ],
-                default: 'Message Model',
+                default: 'createCompletion',
             },
             {
                 displayName: 'Model Name or ID',
