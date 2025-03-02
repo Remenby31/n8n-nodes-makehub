@@ -232,7 +232,7 @@ export class MakeHub implements INodeType {
                         name: 'simplifyOutput',
                         type: 'boolean',
                         default: false,
-                        description: 'Return only the LLM response message',
+                        description: 'Whether to return only the LLM response message instead of the complete API response',
                     },
                 ],
             },
