@@ -8,6 +8,18 @@ import {
     IExecuteFunctions,
 } from 'n8n-workflow';
 
+interface RequestBody {
+    model: string;
+    messages: { role: string; content: string; }[];
+    max_tokens?: number;
+    temperature?: number;
+    stream?: boolean;
+    extra_query?: {
+        min_throughput?: string;
+        max_latency?: string;
+    };
+}
+
 export class MakeHub implements INodeType {
     description: INodeTypeDescription = {
         displayName: 'MakeHub AI',
@@ -190,6 +202,19 @@ export class MakeHub implements INodeType {
                 ],
             },
             {
+                displayName: 'Simplify Output',
+                name: 'simplifyOutput',
+                type: 'boolean',
+                default: false,
+                description: 'Whether to return only the LLM response message instead of the complete API response',
+                displayOptions: {
+                    show: {
+                        resource: ['chat'],
+                        operation: ['messageModel'],
+                    },
+                },
+            },
+            {
                 displayName: 'Additional Fields',
                 name: 'additionalFields',
                 type: 'collection',
@@ -215,9 +240,9 @@ export class MakeHub implements INodeType {
                         type: 'number',
                         typeOptions: {
                             minValue: 0,
-                            maxValue: 2,
+                            maxValue: 1,
                         },
-                        default: 1,
+                        default: 0.7,
                         description: 'Controls randomness. Lower is more deterministic, higher is more random.',
                     },
                     {
@@ -226,13 +251,6 @@ export class MakeHub implements INodeType {
                         type: 'boolean',
                         default: false,
                         description: 'Whether to stream back partial progress',
-                    },
-                    {
-                        displayName: 'Simplify Output',
-                        name: 'simplifyOutput',
-                        type: 'boolean',
-                        default: false,
-                        description: 'Whether to return only the LLM response message instead of the complete API response',
                     },
                 ],
             },
@@ -333,8 +351,8 @@ export class MakeHub implements INodeType {
                             transformed: transformedMessages
                         });
 
-                        const body = {
-                            model: this.getNodeParameter('model', i),
+                        const body: RequestBody = {
+                            model: this.getNodeParameter('model', i) as string,
                             messages: transformedMessages,
                         };
 
@@ -348,11 +366,16 @@ export class MakeHub implements INodeType {
                             simplifyOutput?: boolean;
                         };
 
-                        Object.assign(body, {
-                            max_tokens: additionalFields.maxTokens,
-                            temperature: additionalFields.temperature,
-                            stream: additionalFields.stream,
-                        });
+                        // Ne pas inclure maxTokens et temperature s'ils ne sont pas définis
+                        if (additionalFields.maxTokens !== undefined) {
+                            body.max_tokens = additionalFields.maxTokens;
+                        }
+                        if (additionalFields.temperature !== undefined) {
+                            body.temperature = additionalFields.temperature;
+                        }
+                        if (additionalFields.stream !== undefined) {
+                            body.stream = additionalFields.stream;
+                        }
 
                         // Add performance settings if they exist
                         const performanceSettings = this.getNodeParameter('performanceSettings', i, {}) as {
@@ -369,6 +392,9 @@ export class MakeHub implements INodeType {
                             });
                         }
 
+                        // Modification de la récupération du paramètre simplifyOutput
+                        const simplifyOutput = this.getNodeParameter('simplifyOutput', i, false) as boolean;
+
                         const response = await this.helpers.httpRequest({
                             method: 'POST',
                             url: 'https://api.makehub.ai/v1/chat/completions',
@@ -379,8 +405,6 @@ export class MakeHub implements INodeType {
                             },
                         });
 
-                        const simplifyOutput = this.getNodeParameter('additionalFields.simplifyOutput', i, false) as boolean;
-                        
                         if (simplifyOutput && response.choices && response.choices[0]) {
                             returnData.push({ content: response.choices[0].message.content });
                         } else {
