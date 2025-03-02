@@ -52,18 +52,39 @@ Assurez-vous de configurer ces credentials dans n8n. Pour plus d’informations,
 Lors de la configuration du nœud dans votre workflow, vous trouverez les options suivantes :
 
 - **Resource** : Fixé à `Chat`.
-- **Operation** : `Message Model` – Cette opération permet d’envoyer des messages à un modèle LLM.
+- **Operation** : `Message Model` – Permet d’envoyer des messages à un modèle LLM.
 - **Model Name or ID** : Sélectionnez ou spécifiez l’identifiant du modèle LLM à utiliser.
 - **Messages** : Ajoutez un ou plusieurs messages à envoyer. Chaque message comporte :
   - **Role** : Le rôle de l’expéditeur (`assistant`, `system` ou `user`).
   - **Content** : Le contenu du message. Ce champ supporte les expressions pour une évaluation dynamique.
-- **Performance Settings** (Paramètres de performance) :
-  - **Min Throughput** : Débit minimum en tokens/sec.
-  - **Max Latency** : Latence maximale en millisecondes.
-- **Additional Fields** (Champs additionnels) :
-  - **Max Tokens** : Nombre maximal de tokens à générer.
-  - **Temperature** : Contrôle la variabilité de la réponse (plus bas = plus déterministe, plus haut = plus aléatoire).
-  - **Stream** : Active ou désactive la réponse en mode stream.
+  
+### Paramètres de Performance
+
+Les nouveaux paramètres de performance se trouvent désormais sous deux sections distinctes :
+
+- **Min Throughput Settings** : 
+  - **Min Throughput Mode** : Choisissez entre :
+    - **Best Price** : le paramètre n’est pas envoyé.
+    - **Custom Value** : envoie la valeur numérique saisie (par défaut 40 tokens/sec).
+    - **Best Performance** : envoie la chaîne `"best"`.
+  - Si vous choisissez **Custom Value**, un champ vous permet de définir la valeur souhaitée.
+
+- **Max Latency Settings** :
+  - **Max Latency Mode** : Choisissez entre :
+    - **Best Price** : le paramètre n’est pas envoyé.
+    - **Custom Value** : envoie la valeur numérique saisie (par défaut 1000 millisecondes).
+    - **Best Performance** : envoie la chaîne `"best"`.
+  - Si vous choisissez **Custom Value**, un champ vous permet de définir la valeur souhaitée.
+
+### Simplify Output
+
+Le paramètre **Simplify Output** est désormais géré en dehors des champs additionnels.  
+- Si activé, seul le contenu généré par le modèle (situé dans `response.choices[0].message.content`) sera retourné.  
+- Sinon, la réponse complète de l’API sera transmise.
+
+---
+
+Ces options permettent de choisir finement entre l’optimisation du prix et la performance, ainsi qu’un mode de sortie simplifié pour une intégration plus fluide.
 
 ## Exemple d’Utilisation
 
