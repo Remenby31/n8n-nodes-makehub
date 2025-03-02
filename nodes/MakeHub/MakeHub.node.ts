@@ -227,6 +227,13 @@ export class MakeHub implements INodeType {
                         default: false,
                         description: 'Whether to stream back partial progress',
                     },
+                    {
+                        displayName: 'Simplify Output',
+                        name: 'simplifyOutput',
+                        type: 'boolean',
+                        default: false,
+                        description: 'Return only the LLM response message',
+                    },
                 ],
             },
         ],
@@ -338,6 +345,7 @@ export class MakeHub implements INodeType {
                             maxTokens?: number;
                             temperature?: number;
                             stream?: boolean;
+                            simplifyOutput?: boolean;
                         };
 
                         Object.assign(body, {
@@ -371,8 +379,13 @@ export class MakeHub implements INodeType {
                             },
                         });
 
-                        LoggerProxy.debug('Réponse reçue de l\'API:', response);
-                        returnData.push(response);
+                        const simplifyOutput = this.getNodeParameter('additionalFields.simplifyOutput', i, false) as boolean;
+                        
+                        if (simplifyOutput && response.choices && response.choices[0]) {
+                            returnData.push({ content: response.choices[0].message.content });
+                        } else {
+                            returnData.push(response);
+                        }
                     }
                 }
             } catch (error) {
