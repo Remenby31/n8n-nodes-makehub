@@ -173,10 +173,10 @@ export class MakeHub implements INodeType {
                 },
             },
             {
-                displayName: 'Performance Settings',
-                name: 'performanceSettings',
+                displayName: 'Min Throughput Settings',
+                name: 'minThroughputSettings',
                 type: 'collection',
-                placeholder: 'Add Settings',
+                placeholder: 'Add Min Throughput Settings',
                 default: {},
                 displayOptions: {
                     show: {
@@ -186,18 +186,67 @@ export class MakeHub implements INodeType {
                 },
                 options: [
                     {
+                        displayName: 'Min Throughput Mode',
+                        name: 'minThroughputMode',
+                        type: 'options',
+                        options: [
+                            { name: 'Best Price', value: 'bestPrice' },
+                            { name: 'Custom Value', value: 'custom' },
+                            { name: 'Best Performance', value: 'best' },
+                        ],
+                        default: 'bestPrice',
+                        description: 'Choisissez parmi Best Price, Custom Value ou Best Performance'
+                    },
+                    {
                         displayName: 'Min Throughput',
                         name: 'minThroughput',
                         type: 'number',
-                        default: 50,
-                        description: 'Minimum throughput in tokens/sec',
+                        default: 40,
+                        displayOptions: {
+                            show: {
+                                minThroughputMode: ['custom']
+                            }
+                        },
+                        description: 'Valeur personnalisée en tokens/sec'
+                    },
+                ],
+            },
+            {
+                displayName: 'Max Latency Settings',
+                name: 'maxLatencySettings',
+                type: 'collection',
+                placeholder: 'Add Max Latency Settings',
+                default: {},
+                displayOptions: {
+                    show: {
+                        resource: ['chat'],
+                        operation: ['messageModel'],
+                    },
+                },
+                options: [
+                    {
+                        displayName: 'Max Latency Mode',
+                        name: 'maxLatencyMode',
+                        type: 'options',
+                        options: [
+                            { name: 'Best Price', value: 'bestPrice' },
+                            { name: 'Custom Value', value: 'custom' },
+                            { name: 'Best Performance', value: 'best' },
+                        ],
+                        default: 'bestPrice',
+                        description: 'Choisissez parmi Best Price, Custom Value ou Best Performance'
                     },
                     {
                         displayName: 'Max Latency',
                         name: 'maxLatency',
                         type: 'number',
                         default: 1000,
-                        description: 'Maximum latency in milliseconds',
+                        displayOptions: {
+                            show: {
+                                maxLatencyMode: ['custom']
+                            }
+                        },
+                        description: 'Valeur personnalisée en millisecondes'
                     },
                 ],
             },
@@ -377,19 +426,26 @@ export class MakeHub implements INodeType {
                             body.stream = additionalFields.stream;
                         }
 
-                        // Add performance settings if they exist
-                        const performanceSettings = this.getNodeParameter('performanceSettings', i, {}) as {
-                            minThroughput?: number;
-                            maxLatency?: number;
-                        };
-
-                        if (performanceSettings.minThroughput || performanceSettings.maxLatency) {
-                            Object.assign(body, {
-                                extra_query: {
-                                    min_throughput: performanceSettings.minThroughput?.toString(),
-                                    max_latency: performanceSettings.maxLatency?.toString(),
-                                },
-                            });
+                        // Récupération des paramètres de performance
+                        const minThroughputSettings = this.getNodeParameter('minThroughputSettings', i, {}) as { minThroughputMode?: string, minThroughput?: number };
+                        const maxLatencySettings = this.getNodeParameter('maxLatencySettings', i, {}) as { maxLatencyMode?: string, maxLatency?: number };
+                        
+                        const extraQuery: { [key: string]: string } = {};
+                        
+                        if (minThroughputSettings.minThroughputMode && minThroughputSettings.minThroughputMode !== 'bestPrice') {
+                            extraQuery.min_throughput = minThroughputSettings.minThroughputMode === 'custom'
+                                ? String(minThroughputSettings.minThroughput)
+                                : 'best';
+                        }
+                        
+                        if (maxLatencySettings.maxLatencyMode && maxLatencySettings.maxLatencyMode !== 'bestPrice') {
+                            extraQuery.max_latency = maxLatencySettings.maxLatencyMode === 'custom'
+                                ? String(maxLatencySettings.maxLatency)
+                                : 'best';
+                        }
+                        
+                        if (Object.keys(extraQuery).length > 0) {
+                            Object.assign(body, { extra_query: extraQuery });
                         }
 
                         // Modification de la récupération du paramètre simplifyOutput
