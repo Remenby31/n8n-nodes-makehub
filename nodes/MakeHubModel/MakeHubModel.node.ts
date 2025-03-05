@@ -238,7 +238,7 @@ export class MakeHub implements INodeType {
 						modelsList = response.models;
 					} else {
 						// Try to find an array in the response
-						for (const [key, value] of Object.entries(response)) {
+						for (const [_, value] of Object.entries(response)) {
 							if (Array.isArray(value)) {
 								modelsList = value;
 								break;
