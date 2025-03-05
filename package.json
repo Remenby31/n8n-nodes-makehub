@@ -44,7 +44,8 @@
       "dist/credentials/MakeHubApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/MakeHub/MakeHub.node.js"
+      "dist/nodes/MakeHub/MakeHub.node.js",
+      "dist/nodes/MakeHubModel/MakeHub.node.js"
     ]
   },
   "devDependencies": {
