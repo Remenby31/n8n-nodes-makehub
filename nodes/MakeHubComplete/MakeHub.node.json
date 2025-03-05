@@ -1,0 +1,21 @@
+{
+    "node": "n8n-nodes-base.makeHub",
+    "nodeVersion": "1.0",
+    "codexVersion": "1.0",
+    "categories": [
+        "AI",
+        "Utility"
+    ],
+    "resources": {
+        "credentialDocumentation": [
+            {
+                "url": "https://makehub.ai/docs"
+            }
+        ],
+        "primaryDocumentation": [
+            {
+                "url": "https://makehub.ai/docs"
+            }
+        ]
+    }
+}
