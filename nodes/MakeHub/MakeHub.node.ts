@@ -12,11 +12,7 @@ import {
     IRequestOptions,
 } from 'n8n-workflow';
 
-interface IMakeHubModel {
-    model_id: string;
-    name?: string;
-    description?: string;
-}
+// Suppression de l'interface IMakeHubModel non utilisée
 
 interface IMakeHubResponse extends IDataObject {
     id: string;
@@ -220,7 +216,7 @@ export class MakeHubAiAgent implements INodeType {
                         hasApiKey: !!credentials.apiKey
                     });
                     
-                    const options: IRequestOptions = {
+                    const requestOptions: IRequestOptions = {
                         url: 'https://api.makehub.ai/v1/models',
                         headers: {
                             'Authorization': `Bearer ${credentials.apiKey}`,
@@ -230,7 +226,7 @@ export class MakeHubAiAgent implements INodeType {
                         json: true,
                     };
                     
-                    const responseData = await this.helpers.request(options);
+                    const responseData = await this.helpers.request(requestOptions);
                     
                     LoggerProxy.info('Response received from MakeHub API');
                     LoggerProxy.debug('Response analysis:', {
@@ -250,7 +246,7 @@ export class MakeHubAiAgent implements INodeType {
                             modelsList = responseData.models;
                         } else {
                             // Look for any array property
-                            for (const [key, value] of Object.entries(responseData)) {
+                            for (const [_, value] of Object.entries(responseData)) {
                                 if (Array.isArray(value)) {
                                     modelsList = value;
                                     break;
@@ -269,17 +265,22 @@ export class MakeHubAiAgent implements INodeType {
                         return [{ name: 'No Models Available', value: '' }];
                     }
 
-                    const options: INodePropertyOptions[] = modelsList.map((model: any) => {
+                    const modelOptions: INodePropertyOptions[] = modelsList.map((model: any) => {
                         const modelId = model.model_id || model.id || model.name;
-                        return {
+                        const option: INodePropertyOptions = {
                             name: modelId,
                             value: modelId,
-                            description: model.description || '',
                         };
-                    }).filter((option): option is INodePropertyOptions => !!option.value);
+                        
+                        if (model.description) {
+                            option.description = model.description;
+                        }
+                        
+                        return option;
+                    }).filter((option) => !!option.value);
 
-                    LoggerProxy.info(`${options.length} models converted to options`);
-                    return options;
+                    LoggerProxy.info(`${modelOptions.length} models converted to options`);
+                    return modelOptions;
                 } catch (error) {
                     LoggerProxy.error('Error retrieving models:', {
                         message: (error as Error).message,
