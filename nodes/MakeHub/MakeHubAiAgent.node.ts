@@ -9,10 +9,7 @@ import {
 	LoggerProxy,
 } from 'n8n-workflow';
 
-import { getConnectionHintNoticeField } from '@utils/sharedFields';
 import { ChatOpenAI, type ClientOptions } from '@langchain/openai';
-import { makeN8nLlmFailedAttemptHandler } from '../n8nLlmFailedAttemptHandler';
-import { N8nLlmTracing } from '../N8nLlmTracing';
 
 export class LmChatMakeHub implements INodeType {
 	description: INodeTypeDescription = {
@@ -55,7 +52,12 @@ export class LmChatMakeHub implements INodeType {
 			baseURL: 'https://api.makehub.ai/v1',
 		},
 		properties: [
-			getConnectionHintNoticeField([NodeConnectionType.AiChain, NodeConnectionType.AiAgent]),
+			{
+				displayName: 'Ce nœud peut être connecté à: Nœuds de chaîne AI, Agents AI',
+				name: 'connectionHint',
+				type: 'notice',
+				default: '',
+			},
 			{
 				displayName: 'Model',
 				name: 'model',
@@ -296,8 +298,6 @@ export class LmChatMakeHub implements INodeType {
 			maxRetries: options.maxRetries ?? 2,
 			configuration,
 			modelKwargs,
-			callbacks: [new N8nLlmTracing(this)],
-			onFailedAttempt: makeN8nLlmFailedAttemptHandler(this),
 		});
 
 		LoggerProxy.info('MakeHub AI Chat Model node initialized successfully');
