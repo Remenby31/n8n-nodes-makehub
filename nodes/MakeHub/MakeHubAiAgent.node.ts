@@ -49,7 +49,6 @@ export class MakeHubAiAgent implements INodeType {
         },
         inputs: '={{["main"]}}',
         outputs: '={{["main"]}}',
-        tags: ['AI', 'Language Model', 'LLM'],
         credentials: [
             {
                 name: 'makeHubApi',
