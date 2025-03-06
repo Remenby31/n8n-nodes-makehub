@@ -45,7 +45,6 @@ export class MakeHubAiAgent implements INodeType {
         description: 'Interface avec les modèles de langage MakeHub AI',
         defaults: {
             name: 'MakeHub AI',
-            color: '#ff6600',
         },
         inputs: '={{["main"]}}',
         outputs: '={{["main"]}}',
