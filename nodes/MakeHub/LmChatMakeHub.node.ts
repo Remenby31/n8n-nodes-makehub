@@ -7,6 +7,7 @@ import {
 	type ISupplyDataFunctions,
 	type SupplyData,
 	LoggerProxy,
+	NodeOperationError,
 } from 'n8n-workflow';
 
 import { ChatOpenAI, type ClientOptions } from '@langchain/openai';
@@ -113,15 +114,11 @@ export class LmChatMakeHub implements INodeType {
 				default: {},
 				options: [
 					{
-						displayName: 'System Prompt',
-						name: 'systemPrompt',
-						type: 'string',
-						typeOptions: {
-							rows: 4,
-						},
-						default: '',
-						description: 'System message to set the behavior of the assistant',
-						placeholder: 'You are a helpful assistant...',
+						displayName: 'Max Retries',
+						name: 'maxRetries',
+						default: 2,
+						description: 'Maximum number of retries to attempt',
+						type: 'number',
 					},
 					{
 						displayName: 'Maximum Number of Tokens',
@@ -146,17 +143,21 @@ export class LmChatMakeHub implements INodeType {
 						type: 'boolean',
 					},
 					{
+						displayName: 'System Prompt',
+						name: 'systemPrompt',
+						type: 'string',
+						typeOptions: {
+							rows: 4,
+						},
+						default: '',
+						description: 'System message to set the behavior of the assistant',
+						placeholder: 'You are a helpful assistant...',
+					},
+					{
 						displayName: 'Timeout',
 						name: 'timeout',
 						default: 360000,
 						description: 'Maximum amount of time a request is allowed to take in milliseconds',
-						type: 'number',
-					},
-					{
-						displayName: 'Max Retries',
-						name: 'maxRetries',
-						default: 2,
-						description: 'Maximum number of retries to attempt',
 						type: 'number',
 					},
 				],
@@ -236,7 +237,7 @@ export class LmChatMakeHub implements INodeType {
 		const credentials = await this.getCredentials('makeHubApi');
 		
 		if (!credentials?.apiKey) {
-			throw new Error('No valid API key provided');
+			throw new NodeOperationError(this.getNode(), 'No valid API key provided');
 		}
 
 		const modelName = this.getNodeParameter('model', itemIndex) as string;
