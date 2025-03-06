@@ -36,7 +36,7 @@ interface IMakeHubResponse extends IDataObject {
 
 export class MakeHubAiAgent implements INodeType {
     description: INodeTypeDescription = {
-        displayName: 'MakeHub AI',
+        displayName: 'MakeHub AI Agent',
         name: 'makeHubAiAgent',
         icon: 'file:makehub.svg',
         group: ['transform'],
