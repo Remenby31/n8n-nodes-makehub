@@ -40,7 +40,11 @@ export class LmChatMakeHub implements INodeType {
 		// eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
 		inputs: [],
 		// eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
-		outputs: [NodeConnectionType.AiLanguageModel],
+		outputs: [
+			NodeConnectionType.AiLanguageModel,
+			NodeConnectionType.AiChatModel,  // Ajout du type de connexion pour les agents AI
+		],
+		
 		outputNames: ['Model'],
 		credentials: [
 			{
