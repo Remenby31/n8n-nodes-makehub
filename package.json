@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-makehub",
-  "version": "1.0.34",
+  "version": "1.0.35",
   "description": "N8N node to interact with MakeHub AI's LLM API for advanced language model capabilities",
   "keywords": [
     "n8n",
@@ -45,7 +45,7 @@
     ],
     "nodes": [
       "dist/nodes/MakeHub/MakeHub.node.js",
-      "dist/nodes/MakeHub/MakeHubAiAgent.node.js"
+      "dist/nodes/MakeHub/LmChatMakeHub.node.js"
     ]
   },
   "devDependencies": {
