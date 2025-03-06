@@ -36,18 +36,20 @@ interface IMakeHubResponse extends IDataObject {
 
 export class MakeHubAiAgent implements INodeType {
     description: INodeTypeDescription = {
-        displayName: 'MakeHub AI Agent',
+        displayName: 'MakeHub AI Chat Model',
         name: 'makeHubAiAgent',
         icon: 'file:makehub.svg',
-        group: ['transform'],
+        group: ['ai'],
         version: 1,
         subtitle: '={{$parameter["operation"]}}',
-        description: 'Use MakeHub AI LLM models as AI agents',
+        description: 'Interface avec les modèles de langage MakeHub AI',
         defaults: {
-            name: 'MakeHub AI Agent',
+            name: 'MakeHub AI',
+            color: '#ff6600',
         },
         inputs: '={{["main"]}}',
         outputs: '={{["main"]}}',
+        tags: ['AI', 'Language Model', 'LLM'],
         credentials: [
             {
                 name: 'makeHubApi',
