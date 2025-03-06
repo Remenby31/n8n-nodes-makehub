@@ -40,11 +40,7 @@ export class LmChatMakeHub implements INodeType {
 		// eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
 		inputs: [],
 		// eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
-		outputs: [
-			NodeConnectionType.AiLanguageModel,
-			NodeConnectionType.AiChatModel,  // Ajout du type de connexion pour les agents AI
-		],
-		
+		outputs: [NodeConnectionType.AiLanguageModel],
 		outputNames: ['Model'],
 		credentials: [
 			{
@@ -58,10 +54,14 @@ export class LmChatMakeHub implements INodeType {
 		},
 		properties: [
 			{
+				// Champ de notice explicite pour indiquer la compatibilité avec les agents AI
 				displayName: 'Ce nœud peut être connecté à: Nœuds de chaîne AI, Agents AI',
 				name: 'connectionHint',
 				type: 'notice',
 				default: '',
+				typeOptions: {
+					connectionTypes: [NodeConnectionType.AiChain, NodeConnectionType.AiAgent],
+				},
 			},
 			{
 				displayName: 'Model',
