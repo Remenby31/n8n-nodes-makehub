@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-makehub",
-  "version": "1.0.33",
+  "version": "1.0.34",
   "description": "N8N node to interact with MakeHub AI's LLM API for advanced language model capabilities",
   "keywords": [
     "n8n",
